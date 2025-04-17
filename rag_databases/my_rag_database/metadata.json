@@ -1,0 +1,17 @@
+{
+  "collection_name": "documents",
+  "document_count": 4,
+  "chunk_count": 14,
+  "documents": {
+    "/var/folders/6j/cbsd565s2rvfght9w8pgv_t80000gn/T/Bill_Cottrell.pdf": {
+      "chunks": 14,
+      "pages": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  },
+  "created_at": "2025-04-14 12:01:53"
+}
