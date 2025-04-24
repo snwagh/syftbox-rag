@@ -109,25 +109,80 @@ def refresh_token(refresh_token):
     response = requests.post(TOKEN_ENDPOINT, data=data)
     return response.json() if response.status_code == 200 else None
 
-def list_onedrive_files(access_token):
+def list_onedrive_files(access_token, folder_id=None):
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json'
     }
     
-    endpoint = f"{GRAPH_ENDPOINT}/me/drive/items/{DOCUMENTS_FOLDER_ID}/children"
-    response = requests.get(endpoint, headers=headers)
+    all_files = []
     
-    if response.status_code == 200:
-        files = response.json().get('value', [])
-        print(f"\nFound {len(files)} files/folders:")
-        for file in files:
-            file_type = "📁 Folder" if 'folder' in file else "📄 File"
-            print(f"{file_type}: {file['name']} (ID: {file['id']})")
-        return files
-    else:
-        print(f"Error listing files: {response.status_code}")
-        return []
+    def list_folder_contents(folder_id, folder_name="root"):
+        print(f"Scanning folder: {folder_name}")
+        endpoint = f"{GRAPH_ENDPOINT}/me/drive/items/{folder_id}/children"
+        try:
+            response = requests.get(endpoint, headers=headers)
+            response.raise_for_status()  # Raise an exception for bad status codes
+            
+            items = response.json().get('value', [])
+            print(f"Found {len(items)} items in {folder_name}")
+            
+            for item in items:
+                if 'folder' in item:
+                    # Recursively list contents of subfolders
+                    list_folder_contents(item['id'], item['name'])
+                else:
+                    all_files.append(item)
+                    print(f"Added file: {item['name']}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error accessing folder {folder_name}: {str(e)}")
+            return
+    
+    # Start with root folder if no folder_id provided
+    if folder_id is None:
+        folder_id = "root"
+    
+    print("Starting recursive file scan...")
+    list_folder_contents(folder_id)
+    print(f"\nTotal files found: {len(all_files)}")
+    return all_files
+
+def select_files_for_rag(files):
+    print("\nAvailable files:")
+    for i, file in enumerate(files, 1):
+        # Get the full path from the parentReference if available, otherwise use just the name
+        path = file.get('parentReference', {}).get('path', '')
+        if path:
+            # Remove the /drive/root: prefix from the path
+            path = path.replace('/drive/root:', '')
+            # Add the file name to the path
+            full_path = f"{path}/{file['name']}"
+        else:
+            full_path = file['name']
+        print(f"{i}. {full_path}")
+    
+    while True:
+        try:
+            selection = input("\nEnter the numbers of files you want to include in the RAG database (comma-separated, e.g., '1,3,5'): ")
+            selected_indices = [int(idx.strip()) - 1 for idx in selection.split(',')]
+            
+            # Validate indices
+            if all(0 <= idx < len(files) for idx in selected_indices):
+                selected_files = [files[idx] for idx in selected_indices]
+                print("\nSelected files:")
+                for file in selected_files:
+                    path = file.get('parentReference', {}).get('path', '')
+                    if path:
+                        path = path.replace('/drive/root:', '')
+                        full_path = f"{path}/{file['name']}"
+                    else:
+                        full_path = file['name']
+                    print(f"- {full_path}")
+                return selected_files
+            else:
+                print("Invalid selection. Please try again.")
+        except ValueError:
+            print("Invalid input. Please enter numbers separated by commas.")
 
 def download_file(access_token, file_id, file_name):
     headers = {'Authorization': f'Bearer {access_token}'}
@@ -289,19 +344,30 @@ def main():
     
     print("Successfully authenticated!")
     
-    # List and download all files
-    files = list_onedrive_files(tokens['access_token'])
-    downloaded_files = []
+    # List all files recursively
+    print("\nListing all files in OneDrive...")
+    all_files = list_onedrive_files(tokens['access_token'])
     
-    if files:
-        print("\nDownloading all files...")
-        for file in files:
-            if 'folder' not in file:  # Only download files, not folders
-                file_id = file['id']
-                file_name = file['name']
-                if download_file(tokens['access_token'], file_id, file_name):
-                    downloaded_files.append(file_name)
-                    print(f"Downloaded: {file_name}")
+    if not all_files:
+        print("No files found in OneDrive.")
+        return
+    
+    # Let user select files for RAG
+    selected_files = select_files_for_rag(all_files)
+    
+    if not selected_files:
+        print("No files selected. Exiting...")
+        return
+    
+    # Download selected files
+    downloaded_files = []
+    print("\nDownloading selected files...")
+    for file in selected_files:
+        file_id = file['id']
+        file_name = file['name']
+        if download_file(tokens['access_token'], file_id, file_name):
+            downloaded_files.append(file_name)
+            print(f"Downloaded: {file_name}")
     
     try:
         # Setup RAG system
