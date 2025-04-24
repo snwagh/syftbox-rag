@@ -36,17 +36,41 @@ uv venv
 uv pip install -r requirements.txt
 ```
 
+## Setting up Azure Credentials
+- Log into your azure account
+- Go to App Registrations and register a new app
+- Create the following API permissions for that app
+<img width="1690" alt="Screenshot 2025-04-24 at 3 25 39 PM" src="https://github.com/user-attachments/assets/c69862e6-b899-4e63-a0b5-cc1622c7eb41" />
+
+- Copy the Client ID from the overview page (for the `.env` file)
+<img width="1123" alt="Screenshot 2025-04-24 at 3 39 54 PM" src="https://github.com/user-attachments/assets/54b3e80f-c394-4897-990c-8ee3f69bbf5b" />
+
+- Create a client secret and copy the secret (for the `.env` file)
+<img width="1119" alt="Screenshot 2025-04-24 at 3 40 23 PM" src="https://github.com/user-attachments/assets/e3e78f1a-bce5-4529-a377-23c502b83607" />
+
+
+Create a .env file 
+```
+echo "CLIENT_ID=beb...
+CLIENT_SECRET=YXW....
+OLLAMA_BASE_URL=http://localhost:11434" > .env
+```
+
+
+
 ## Usage
 
-### With Web Interface
+Make sure OLLAMA server is running and has at least one model. 
+
+### With Jupyter Lab
 
 To run the application with the Streamlit web interface:
 
 ```bash
-uv run streamlit run app1.py
+uv run jupyter lab
 ```
 
-This will start a local web server and open the application in your default browser.
+And follow the `RAG.ipynb` notebook
 
 ### Without Web Interface
 
@@ -58,8 +82,36 @@ uv run main.py
 
 ## Project Structure
 
-- `app1.py`: Streamlit web application for creating
-- `app2.py`: Additional application module for using the RAG
-- `main.py`: Command-line interface (creating and using RAG)
+- `main.py`: Command-line interface for creating and using RAG
+- `rag_builder/`: Core RAG implementation modules
+- `RAG.ipynb`: Jupyter notebook with interactive examples and tutorials
 - `requirements.txt`: Project dependencies
 - `questions.txt`: Sample questions for testing
+- `.env`: Environment variables for configuration
+
+## Configuration
+
+The application requires the following environment variables in `.env`:
+
+- `CLIENT_ID`: Azure AD application client ID
+- `CLIENT_SECRET`: Azure AD application client secret
+- `OLLAMA_BASE_URL`: URL for the Ollama server (Keep it as http://localhost:11434)
+
+## Development
+
+To contribute to the project:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [Ollama](https://ollama.ai/) for providing the local LLM server
+- [Streamlit](https://streamlit.io/) for the web interface
+- [uv](https://github.com/astral-sh/uv) for Python package management
