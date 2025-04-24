@@ -161,21 +161,25 @@ def load_tokens():
 
 def setup_rag():
     try:
-        # Initialize ChromaDB
-        chroma_client = chromadb.PersistentClient(path="chroma_db")
+        db_path = "syftbox_rag_dbs/onedrive_db"
+        # Create the rag_databases directory if it doesn't exist
+        os.makedirs(db_path, exist_ok=True)
         
-        # Check if collection exists
+        # Initialize ChromaDB with the new path
+        chroma_client = chromadb.PersistentClient(path=db_path)
+        
+        # Try to get the existing collection, if it fails then create a new one
         try:
             collection = chroma_client.get_collection(name="documents")
-            print("Using existing collection")
+            print("Using existing collection 'documents'")
         except Exception as e:
-            # Collection doesn't exist, create it
-            print("Creating new collection")
-            collection = chroma_client.create_collection(
-                name="documents"
-            )
+            if "Collection [documents] does not exists" in str(e):
+                print("Creating new collection 'documents'")
+                collection = chroma_client.create_collection(name="documents")
+            else:
+                raise
         
-        return collection
+        return collection, chroma_client
     except Exception as e:
         print(f"Error setting up RAG system: {str(e)}")
         print("Please make sure ChromaDB is properly installed and the database path is accessible.")
@@ -302,7 +306,7 @@ def main():
     try:
         # Setup RAG system
         print("\nSetting up RAG system...")
-        collection = setup_rag()
+        collection, client = setup_rag()
         process_documents(collection)
     except Exception as e:
         print(f"Error setting up RAG system: {str(e)}")
@@ -319,20 +323,7 @@ def main():
             print(f"Error deleting {file_name}: {e}")
     
     # Interactive querying
-    print("\nRAG system is ready. You can now ask questions about the documents.")
-    print("Type 'exit' to quit.")
-    
-    while True:
-        query = input("\nEnter your question: ")
-        if query.lower() == 'exit':
-            break
-        
-        try:
-            answer = query_rag(collection, query)
-            print("\nAnswer:", answer)
-        except Exception as e:
-            print(f"Error processing query: {str(e)}")
-            print("Please try again with a different question.")
+    print(f"\nRAG system is ready at {client._identifier}")
 
 if __name__ == "__main__":
     main()
