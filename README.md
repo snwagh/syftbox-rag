@@ -40,10 +40,13 @@ uv pip install -r requirements.txt
 - Log into your azure account
 - Go to App Registrations and register a new app
 - Create the following API permissions for that app
+<img width="1690" alt="Screenshot 2025-04-24 at 3 25 39 PM" src="https://github.com/user-attachments/assets/c69862e6-b899-4e63-a0b5-cc1622c7eb41" />
 
 - Copy the Client ID from the overview page (for the `.env` file)
+<img width="1123" alt="Screenshot 2025-04-24 at 3 39 54 PM" src="https://github.com/user-attachments/assets/54b3e80f-c394-4897-990c-8ee3f69bbf5b" />
 
 - Create a client secret and copy the secret (for the `.env` file)
+<img width="1119" alt="Screenshot 2025-04-24 at 3 40 23 PM" src="https://github.com/user-attachments/assets/e3e78f1a-bce5-4529-a377-23c502b83607" />
 
 
 Create a .env file 
