@@ -79,65 +79,26 @@ show_menu() {
     echo -n "Enter your choice (1-4): "
 }
 
-# Check if script is being piped
-if [ -t 0 ]; then
-    # Interactive mode
-    while true; do
-        show_menu
-        read choice
+# Main script
+show_menu
+read choice
 
-        case $choice in
-            1)
-                install
-                ;;
-            2)
-                test
-                ;;
-            3)
-                clean
-                ;;
-            4)
-                echo "Exiting..."
-                exit 0
-                ;;
-            *)
-                echo "Invalid choice. Please enter a number between 1 and 4."
-                ;;
-        esac
-
-        echo
-        echo "Press Enter to continue..."
-        read
-        clear
-    done
-else
-    # Non-interactive mode (piped)
-    echo "Please choose an option:"
-    echo "1) Install"
-    echo "2) Test"
-    echo "3) Clean"
-    echo "4) Exit"
-    echo
-    echo -n "Enter your choice (1-4): "
-    read choice
-
-    case $choice in
-        1)
-            install
-            ;;
-        2)
-            test
-            ;;
-        3)
-            clean
-            ;;
-        4)
-            echo "Exiting..."
-            exit 0
-            ;;
-        *)
-            echo "Invalid choice. Please enter a number between 1 and 4."
-            exit 1
-            ;;
-    esac
-fi 
+case $choice in
+    1)
+        install
+        ;;
+    2)
+        test
+        ;;
+    3)
+        clean
+        ;;
+    4)
+        echo "Exiting..."
+        exit 0
+        ;;
+    *)
+        echo "Invalid choice. Please enter a number between 1 and 4."
+        exit 1
+        ;;
+esac 
