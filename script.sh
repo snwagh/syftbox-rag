@@ -78,44 +78,40 @@ prompt_choice() {
         echo "3) Clean"
         echo "4) Exit"
         echo
-        prompt=$(echo -n "Enter your choice (1-4): ")
-        read -p "$prompt" choice < /dev/tty
+        echo -n "Enter your choice (1-4): "
+        read choice
     done
     echo "$choice"
 }
 
-# Main script
-if [ -t 0 ]; then
-    # Interactive mode
-    choice=$(prompt_choice)
+# Check if this is the downloaded script or the installer
+if [ "$0" = "sh" ]; then
+    # This is being piped to sh, so we need to download and execute
+    TMP_SCRIPT=$(mktemp)
+    curl -LsSf https://raw.githubusercontent.com/snwagh/syftbox-rag/refs/heads/other-rag/script.sh -o "$TMP_SCRIPT"
+    chmod +x "$TMP_SCRIPT"
+    exec "$TMP_SCRIPT"
 else
-    # Non-interactive mode (piped)
-    echo "Please choose an option:"
-    echo "1) Install"
-    echo "2) Test"
-    echo "3) Clean"
-    echo "4) Exit"
-    echo
-    echo -n "Enter your choice (1-4): "
-    read choice < /dev/tty
-fi
+    # This is the actual script being executed
+    choice=$(prompt_choice)
 
-case $choice in
-    1)
-        install
-        ;;
-    2)
-        test
-        ;;
-    3)
-        clean
-        ;;
-    4)
-        echo "Exiting..."
-        exit 0
-        ;;
-    *)
-        echo "Invalid choice. Please enter a number between 1 and 4."
-        exit 1
-        ;;
-esac 
+    case $choice in
+        1)
+            install
+            ;;
+        2)
+            test
+            ;;
+        3)
+            clean
+            ;;
+        4)
+            echo "Exiting..."
+            exit 0
+            ;;
+        *)
+            echo "Invalid choice. Please enter a number between 1 and 4."
+            exit 1
+            ;;
+    esac
+fi 
