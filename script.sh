@@ -68,32 +68,59 @@ clean() {
     echo "Cleanup completed!"
 }
 
-# Function to display menu
-show_menu() {
-    echo "Please choose an option:"
-    echo "1) Install"
-    echo "2) Test"
-    echo "3) Clean"
-    echo "4) Exit"
-    echo
-    echo -n "Enter your choice (1-4): "
-}
+# Create a temporary file for the script
+TMP_SCRIPT=$(mktemp)
+cat > "$TMP_SCRIPT" << 'EOF'
+#!/bin/sh
 
-# Main script
-show_menu
+echo "Please choose an option:"
+echo "1) Install"
+echo "2) Test"
+echo "3) Clean"
+echo "4) Exit"
+echo
+echo -n "Enter your choice (1-4): "
 read choice
 
 case $choice in
     1)
-        install
+        echo "install"
         ;;
     2)
-        test
+        echo "test"
         ;;
     3)
-        clean
+        echo "clean"
         ;;
     4)
+        echo "exit"
+        ;;
+    *)
+        echo "invalid"
+        ;;
+esac
+EOF
+
+chmod +x "$TMP_SCRIPT"
+
+# Run the temporary script and capture its output
+choice=$("$TMP_SCRIPT")
+
+# Clean up the temporary script
+rm "$TMP_SCRIPT"
+
+# Execute the chosen option
+case $choice in
+    "install")
+        install
+        ;;
+    "test")
+        test
+        ;;
+    "clean")
+        clean
+        ;;
+    "exit")
         echo "Exiting..."
         exit 0
         ;;
