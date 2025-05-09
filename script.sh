@@ -68,64 +68,43 @@ clean() {
     echo "Cleanup completed!"
 }
 
-# Create a temporary file for the script
-TMP_SCRIPT=$(mktemp)
-cat > "$TMP_SCRIPT" << 'EOF'
-#!/bin/sh
+# Function to show menu and get choice
+show_menu() {
+    echo "Please choose an option:"
+    echo "1) Install"
+    echo "2) Test"
+    echo "3) Clean"
+    echo "4) Exit"
+    echo
+    echo -n "Enter your choice (1-4): "
+    read choice < /dev/tty
+}
 
-echo "Please choose an option:"
-echo "1) Install"
-echo "2) Test"
-echo "3) Clean"
-echo "4) Exit"
-echo
-echo -n "Enter your choice (1-4): "
-read choice
+# Main script
+while true; do
+    show_menu
 
-case $choice in
-    1)
-        echo "install"
-        ;;
-    2)
-        echo "test"
-        ;;
-    3)
-        echo "clean"
-        ;;
-    4)
-        echo "exit"
-        ;;
-    *)
-        echo "invalid"
-        ;;
-esac
-EOF
+    case $choice in
+        1)
+            install
+            ;;
+        2)
+            test
+            ;;
+        3)
+            clean
+            ;;
+        4)
+            echo "Exiting..."
+            exit 0
+            ;;
+        *)
+            echo "Invalid choice. Please enter a number between 1 and 4."
+            ;;
+    esac
 
-chmod +x "$TMP_SCRIPT"
-
-# Run the temporary script and capture its output
-choice=$("$TMP_SCRIPT")
-
-# Clean up the temporary script
-rm "$TMP_SCRIPT"
-
-# Execute the chosen option
-case $choice in
-    "install")
-        install
-        ;;
-    "test")
-        test
-        ;;
-    "clean")
-        clean
-        ;;
-    "exit")
-        echo "Exiting..."
-        exit 0
-        ;;
-    *)
-        echo "Invalid choice. Please enter a number between 1 and 4."
-        exit 1
-        ;;
-esac 
+    echo
+    echo "Press Enter to continue..."
+    read < /dev/tty
+    clear
+done 
