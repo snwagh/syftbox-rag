@@ -78,14 +78,27 @@ prompt_choice() {
         echo "3) Clean"
         echo "4) Exit"
         echo
-        echo -n "Enter your choice (1-4): "
-        read choice < /dev/tty
+        prompt=$(echo -n "Enter your choice (1-4): ")
+        read -p "$prompt" choice < /dev/tty
     done
     echo "$choice"
 }
 
 # Main script
-choice=$(prompt_choice)
+if [ -t 0 ]; then
+    # Interactive mode
+    choice=$(prompt_choice)
+else
+    # Non-interactive mode (piped)
+    echo "Please choose an option:"
+    echo "1) Install"
+    echo "2) Test"
+    echo "3) Clean"
+    echo "4) Exit"
+    echo
+    echo -n "Enter your choice (1-4): "
+    read choice < /dev/tty
+fi
 
 case $choice in
     1)
@@ -100,5 +113,9 @@ case $choice in
     4)
         echo "Exiting..."
         exit 0
+        ;;
+    *)
+        echo "Invalid choice. Please enter a number between 1 and 4."
+        exit 1
         ;;
 esac 
