@@ -68,42 +68,29 @@ clean() {
     echo "Cleanup completed!"
 }
 
-# Function to prompt for choice
-prompt_choice() {
-    local choice=""
-    while [ "$choice" != "1" ] && [ "$choice" != "2" ] && [ "$choice" != "3" ] && [ "$choice" != "4" ]; do
-        echo "Please choose an option:"
-        echo "1) Install"
-        echo "2) Test"
-        echo "3) Clean"
-        echo "4) Exit"
-        echo
-        echo -n "Enter your choice (1-4): "
-        read choice
-    done
-    echo "$choice"
-}
-
-# Check if this is the downloaded script or the installer
-if [ "$0" = "sh" ]; then
-    # This is being piped to sh, so we need to download and execute
-    TMP_SCRIPT=$(mktemp)
-    curl -LsSf https://raw.githubusercontent.com/snwagh/syftbox-rag/refs/heads/other-rag/script.sh -o "$TMP_SCRIPT"
-    chmod +x "$TMP_SCRIPT"
-    exec "$TMP_SCRIPT"
-else
-    # This is the actual script being executed
-    choice=$(prompt_choice)
+# Main script
+while true; do
+    echo "Please choose an option:"
+    echo "1) Install"
+    echo "2) Test"
+    echo "3) Clean"
+    echo "4) Exit"
+    echo
+    echo -n "Enter your choice (1-4): "
+    read choice
 
     case $choice in
         1)
             install
+            exit 0
             ;;
         2)
             test
+            exit 0
             ;;
         3)
             clean
+            exit 0
             ;;
         4)
             echo "Exiting..."
@@ -111,7 +98,11 @@ else
             ;;
         *)
             echo "Invalid choice. Please enter a number between 1 and 4."
-            exit 1
             ;;
     esac
-fi 
+
+    echo
+    echo "Press Enter to continue..."
+    read
+    clear
+done 
