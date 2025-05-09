@@ -15,12 +15,10 @@ fi
 data_dir=$(jq -r '.data_dir' ~/.syftbox/config.json)
 email=$(jq -r '.email' ~/.syftbox/config.json)
 
-# git clone https://github.com/openmined/rag-ingestor.git $data_dir/rag-ingestor
-# git clone https://github.com/openmined/rag-router-demo.git $data_dir/rag-router-demo
-git clone git@github.com:OpenMined/rag-ingestor.git $data_dir/apps/rag-ingestor
-git clone git@github.com:OpenMined/rag-router-demo.git $data_dir/apps/rag-router-demo
+syftbox app install https://github.com/openmined/rag-ingestor.git
+syftbox app install https://github.com/openmined/rag-router-demo.git
 
-# Wait for 5 seconds for the folders to be created
+# Wait for 10 seconds for the folders to be created
 echo "........................."
 echo "Waiting for 10 seconds..."
 echo "........................."

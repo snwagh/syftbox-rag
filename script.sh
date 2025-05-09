@@ -68,24 +68,43 @@ clean() {
     echo "Cleanup completed!"
 }
 
-# Main script
-if [ $# -eq 0 ]; then
-    echo "Please specify a command: install, test, or clean"
-    exit 1
-fi
+# Function to display menu
+show_menu() {
+    echo "Please choose an option:"
+    echo "1) Install"
+    echo "2) Test"
+    echo "3) Clean"
+    echo "4) Exit"
+    echo
+    echo -n "Enter your choice (1-4): "
+}
 
-case "$1" in
-    "install")
-        install
-        ;;
-    "test")
-        test
-        ;;
-    "clean")
-        clean
-        ;;
-    *)
-        echo "Invalid command. Please use: install, test, or clean"
-        exit 1
-        ;;
-esac 
+# Main script
+while true; do
+    show_menu
+    read choice
+
+    case $choice in
+        1)
+            install
+            ;;
+        2)
+            test
+            ;;
+        3)
+            clean
+            ;;
+        4)
+            echo "Exiting..."
+            exit 0
+            ;;
+        *)
+            echo "Invalid choice. Please enter a number between 1 and 4."
+            ;;
+    esac
+
+    echo
+    echo "Press Enter to continue..."
+    read
+    clear
+done 
