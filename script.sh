@@ -68,21 +68,26 @@ clean() {
     echo "Cleanup completed!"
 }
 
-# Function to show menu and get choice
-show_menu() {
-    echo "Please choose an option:"
-    echo "1) Install"
-    echo "2) Test"
-    echo "3) Clean"
-    echo "4) Exit"
-    echo
-    echo -n "Enter your choice (1-4): "
-    read choice < /dev/tty
+# Function to get user choice
+get_choice() {
+    local choice=""
+    while [ "$choice" != "1" ] && [ "$choice" != "2" ] && [ "$choice" != "3" ] && [ "$choice" != "4" ]; do
+        echo "Please choose an option:"
+        echo "1) Install"
+        echo "2) Test"
+        echo "3) Clean"
+        echo "4) Exit"
+        echo
+        echo -n "Enter your choice (1-4): "
+        read choice < /dev/tty
+        echo
+    done
+    echo "$choice"
 }
 
 # Main script
 while true; do
-    show_menu
+    choice=$(get_choice)
 
     case $choice in
         1)
@@ -97,9 +102,6 @@ while true; do
         4)
             echo "Exiting..."
             exit 0
-            ;;
-        *)
-            echo "Invalid choice. Please enter a number between 1 and 4."
             ;;
     esac
 
