@@ -68,45 +68,70 @@ clean() {
     echo "Cleanup completed!"
 }
 
-# Function to get user choice
-get_choice() {
-    local choice=""
-    while [ "$choice" != "1" ] && [ "$choice" != "2" ] && [ "$choice" != "3" ] && [ "$choice" != "4" ]; do
-        echo "Please choose an option:"
-        echo "1) Install"
-        echo "2) Test"
-        echo "3) Clean"
-        echo "4) Exit"
-        echo
-        echo -n "Enter your choice (1-4): "
-        read choice < /dev/tty
-        echo
-    done
-    echo "$choice"
-}
+# Create a temporary script
+TMP_SCRIPT=$(mktemp)
+cat > "$TMP_SCRIPT" << 'EOF'
+#!/bin/sh
 
-# Main script
 while true; do
-    choice=$(get_choice)
+    echo "Please choose an option:"
+    echo "1) Install"
+    echo "2) Test"
+    echo "3) Clean"
+    echo "4) Exit"
+    echo
+    echo -n "Enter your choice (1-4): "
+    read choice
 
     case $choice in
         1)
-            install
-            ;;
-        2)
-            test
-            ;;
-        3)
-            clean
-            ;;
-        4)
-            echo "Exiting..."
+            echo "install"
             exit 0
             ;;
+        2)
+            echo "test"
+            exit 0
+            ;;
+        3)
+            echo "clean"
+            exit 0
+            ;;
+        4)
+            echo "exit"
+            exit 0
+            ;;
+        *)
+            echo "Invalid choice. Please enter a number between 1 and 4."
+            ;;
     esac
+done
+EOF
 
-    echo
-    echo "Press Enter to continue..."
-    read < /dev/tty
-    clear
-done 
+chmod +x "$TMP_SCRIPT"
+
+# Run the temporary script and capture its output
+choice=$("$TMP_SCRIPT")
+
+# Clean up the temporary script
+rm "$TMP_SCRIPT"
+
+# Execute the chosen option
+case $choice in
+    "install")
+        install
+        ;;
+    "test")
+        test
+        ;;
+    "clean")
+        clean
+        ;;
+    "exit")
+        echo "Exiting..."
+        exit 0
+        ;;
+    *)
+        echo "Invalid choice. Please enter a number between 1 and 4."
+        exit 1
+        ;;
+esac 
