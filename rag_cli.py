@@ -5,8 +5,12 @@ import json
 import sys
 from pathlib import Path
 from typing import List
+from dotenv import load_dotenv
 
 from rag_system import RAGSystem, DataSourceConnector, LocalFileConnector
+
+# Load environment variables
+load_dotenv()
 
 def setup_argparse():
     """Set up command-line argument parsing."""
@@ -17,16 +21,6 @@ def setup_argparse():
     source_group.add_argument('--local', type=str, help='Path to local files or directory')
     source_group.add_argument('--onedrive', type=str, help='Path in OneDrive')
     source_group.add_argument('--gdrive', type=str, help='Google Drive folder ID')
-    
-    # OneDrive credentials (required if using OneDrive)
-    onedrive_group = parser.add_argument_group('OneDrive options')
-    onedrive_group.add_argument('--onedrive-client-id', type=str, help='OneDrive client ID')
-    onedrive_group.add_argument('--onedrive-client-secret', type=str, help='OneDrive client secret')
-    onedrive_group.add_argument('--onedrive-redirect-uri', type=str, help='OneDrive redirect URI')
-    
-    # Google Drive credentials (required if using Google Drive)
-    gdrive_group = parser.add_argument_group('Google Drive options')
-    gdrive_group.add_argument('--gdrive-credentials', type=str, help='Path to Google Drive credentials JSON file')
     
     # RAG configuration
     parser.add_argument('--vector-store', type=str, default='./rag_db', help='Path to store vector database')
@@ -48,13 +42,14 @@ def setup_argparse():
     return parser
 
 def validate_args(args):
-    """Validate command-line arguments."""
-    if args.onedrive and (not args.onedrive_client_id or not args.onedrive_client_secret or not args.onedrive_redirect_uri):
-        print("Error: OneDrive connection requires --onedrive-client-id, --onedrive-client-secret, and --onedrive-redirect-uri")
-        return False
+    """Validate command-line arguments and environment variables."""
+    if args.onedrive:
+        if not all([os.getenv('MS_CLIENT_ID'), os.getenv('MS_CLIENT_SECRET')]):
+            print("Error: OneDrive connection requires MS_CLIENT_ID and MS_CLIENT_SECRET environment variables")
+            return False
     
-    if args.gdrive and not args.gdrive_credentials:
-        print("Error: Google Drive connection requires --gdrive-credentials")
+    if args.gdrive and not os.getenv('GDRIVE_CREDENTIALS_PATH'):
+        print("Error: Google Drive connection requires GDRIVE_CREDENTIALS_PATH environment variable")
         return False
     
     return True
@@ -66,15 +61,11 @@ def load_documents(args, rag_system):
         return connector.load_documents(args.local)
     
     elif args.onedrive:
-        connector = rag_system.connect_to_onedrive(
-            args.onedrive_client_id,
-            args.onedrive_client_secret,
-            args.onedrive_redirect_uri
-        )
+        connector = rag_system.connect_to_onedrive()
         return connector.load_documents(args.onedrive)
     
     elif args.gdrive:
-        connector = rag_system.connect_to_google_drive(args.gdrive_credentials)
+        connector = rag_system.connect_to_google_drive()
         return connector.load_documents(args.gdrive)
     
     return []

@@ -3,6 +3,10 @@ import json
 import sys
 from typing import List, Dict, Optional, Any, Union
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Data Source Connectors
 from llama_index.readers.file import PDFReader, DocxReader
@@ -84,11 +88,15 @@ class LocalFileConnector(DataSourceConnector):
 class OneDriveConnector(DataSourceConnector):
     """Connector for OneDrive."""
     
-    def __init__(self, client_id: str, client_secret: str, redirect_uri: str):
+    def __init__(self):
         """Initialize OneDrive connector."""
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.redirect_uri = redirect_uri
+        self.client_id = os.getenv('MS_CLIENT_ID')
+        self.client_secret = os.getenv('MS_CLIENT_SECRET')
+        self.redirect_uri = "http://localhost:8000/callback"
+        
+        if not all([self.client_id, self.client_secret]):
+            raise ValueError("Missing required environment variables for OneDrive. Please set MS_CLIENT_ID and MS_CLIENT_SECRET in .env file")
+            
         self.local_connector = LocalFileConnector()
         
     def load_documents(self, source_path: str, download_dir: str = "./temp_downloads") -> List[Document]:
@@ -144,9 +152,13 @@ class OneDriveConnector(DataSourceConnector):
 class GoogleDriveConnector(DataSourceConnector):
     """Connector for Google Drive."""
     
-    def __init__(self, credentials_path: str):
+    def __init__(self):
         """Initialize Google Drive connector."""
-        self.credentials_path = credentials_path
+        self.credentials_path = os.getenv('GDRIVE_CREDENTIALS_PATH')
+        
+        if not self.credentials_path:
+            raise ValueError("Missing required environment variable for Google Drive. Please set GDRIVE_CREDENTIALS_PATH in .env file")
+            
         self.local_connector = LocalFileConnector()
         
     def load_documents(self, folder_id: str, download_dir: str = "./temp_downloads") -> List[Document]:
@@ -232,13 +244,13 @@ class RAGSystem:
         # Initialize connectors
         self.local_connector = LocalFileConnector()
     
-    def connect_to_onedrive(self, client_id: str, client_secret: str, redirect_uri: str):
+    def connect_to_onedrive(self):
         """Create a OneDrive connector."""
-        return OneDriveConnector(client_id, client_secret, redirect_uri)
+        return OneDriveConnector()
     
-    def connect_to_google_drive(self, credentials_path: str):
+    def connect_to_google_drive(self):
         """Create a Google Drive connector."""
-        return GoogleDriveConnector(credentials_path)
+        return GoogleDriveConnector()
     
     def index_documents(self, documents: List[Document], force_reindex: bool = False) -> int:
         """Index documents into the vector store.
