@@ -1,20 +1,13 @@
 import os
-import json
-import sys
-from typing import List, Dict, Optional, Any, Union
+from typing import List
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-# Data Source Connectors
-from llama_index.readers.file import PDFReader, DocxReader
-from llama_index.readers.web import SimpleWebPageReader
-from llama_index.core import Document
-
 # LlamaIndex Core Components
-from llama_index.core import VectorStoreIndex, Settings
+from llama_index.core import VectorStoreIndex, Settings, Document
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
@@ -23,195 +16,8 @@ from llama_index.core.retrievers import VectorIndexRetriever
 # Ollama
 from llama_index.llms.ollama import Ollama
 
-# Optional dependencies for specific connectors
-try:
-    from onedrivesdk import get_default_client, AuthProvider
-except ImportError:
-    pass
-
-try:
-    from google.oauth2.credentials import Credentials
-    from googleapiclient.discovery import build
-    from googleapiclient.http import MediaIoBaseDownload
-except ImportError:
-    pass
-
-class DataSourceConnector:
-    """Base class for data source connectors."""
-    
-    def load_documents(self, source_path: str) -> List[Document]:
-        """Load documents from the source."""
-        raise NotImplementedError
-    
-class LocalFileConnector(DataSourceConnector):
-    """Connector for local files."""
-    
-    def __init__(self):
-        self.pdf_reader = PDFReader()
-        self.docx_reader = DocxReader()
-        self.num_source_files = 0
-    
-    def load_documents(self, source_path: str) -> List[Document]:
-        """Load documents from local files."""
-        path = Path(source_path)
-        if not path.exists():
-            raise FileNotFoundError(f"Path does not exist: {source_path}")
-            
-        documents = []
-        self.num_source_files = 0
-        
-        if path.is_file():
-            documents.extend(self._load_file(path))
-            self.num_source_files = 1
-        elif path.is_dir():
-            for file_path in path.glob("**/*"):
-                if file_path.is_file():
-                    documents.extend(self._load_file(file_path))
-                    self.num_source_files += 1
-                    
-        return documents
-    
-    def _load_file(self, file_path: Path) -> List[Document]:
-        """Load a single file based on its extension."""
-        documents = []
-        if file_path.suffix.lower() == ".pdf":
-            documents = self.pdf_reader.load_data(str(file_path))
-        elif file_path.suffix.lower() == ".docx":
-            documents = self.docx_reader.load_data(str(file_path))
-        
-        # Add source metadata to each document
-        for doc in documents:
-            doc.metadata = {"source": str(file_path)}
-        
-        return documents
-
-class OneDriveConnector(DataSourceConnector):
-    """Connector for OneDrive."""
-    
-    def __init__(self):
-        """Initialize OneDrive connector."""
-        self.client_id = os.getenv('MS_CLIENT_ID')
-        self.client_secret = os.getenv('MS_CLIENT_SECRET')
-        self.redirect_uri = "http://localhost:8000/callback"
-        
-        if not all([self.client_id, self.client_secret]):
-            raise ValueError("Missing required environment variables for OneDrive. Please set MS_CLIENT_ID and MS_CLIENT_SECRET in .env file")
-            
-        self.local_connector = LocalFileConnector()
-        
-    def load_documents(self, source_path: str, download_dir: str = "./temp_downloads") -> List[Document]:
-        """
-        Load documents from OneDrive.
-        source_path: The path in OneDrive.
-        download_dir: Directory to temporarily download files to.
-        """
-        try:
-            # Ensure download directory exists
-            os.makedirs(download_dir, exist_ok=True)
-            
-            # Create OneDrive client
-            auth_provider = AuthProvider(
-                http_provider=None,
-                client_id=self.client_id,
-                scopes=['wl.signin', 'wl.offline_access', 'onedrive.readwrite']
-            )
-            client = get_default_client(client_id=self.client_id, auth_provider=auth_provider)
-            
-            # Get authentication URL
-            auth_url = client.auth_provider.get_auth_url(self.redirect_uri)
-            print(f"Please go to this URL and authorize the app: {auth_url}")
-            
-            # Get the authentication code from user
-            auth_code = input("Enter the authentication code: ")
-            client.auth_provider.authenticate(auth_code, self.redirect_uri, self.client_secret)
-            
-            # Get items from the specified path
-            items = client.item(path=source_path).children.get()
-            
-            documents = []
-            
-            # Download each file and process it
-            for item in items:
-                if not item.folder:  # It's a file
-                    download_path = os.path.join(download_dir, item.name)
-                    with open(download_path, 'wb') as file:
-                        client.item(id=item.id).content.download(file)
-                    
-                    # Use the local connector to process the downloaded file
-                    documents.extend(self.local_connector.load_documents(download_path))
-                    
-                    # Clean up the downloaded file
-                    os.remove(download_path)
-            
-            return documents
-            
-        except Exception as e:
-            print(f"Error connecting to OneDrive: {str(e)}")
-            return []
-
-class GoogleDriveConnector(DataSourceConnector):
-    """Connector for Google Drive."""
-    
-    def __init__(self):
-        """Initialize Google Drive connector."""
-        self.credentials_path = os.getenv('GDRIVE_CREDENTIALS_PATH')
-        
-        if not self.credentials_path:
-            raise ValueError("Missing required environment variable for Google Drive. Please set GDRIVE_CREDENTIALS_PATH in .env file")
-            
-        self.local_connector = LocalFileConnector()
-        
-    def load_documents(self, folder_id: str, download_dir: str = "./temp_downloads") -> List[Document]:
-        """
-        Load documents from Google Drive.
-        folder_id: The ID of the Google Drive folder.
-        download_dir: Directory to temporarily download files to.
-        """
-        try:
-            # Ensure download directory exists
-            os.makedirs(download_dir, exist_ok=True)
-            
-            # Load credentials
-            creds = Credentials.from_authorized_user_info(
-                info=json.load(open(self.credentials_path))
-            )
-            
-            # Build the Drive API client
-            drive_service = build('drive', 'v3', credentials=creds)
-            
-            # List files in the folder
-            results = drive_service.files().list(
-                q=f"'{folder_id}' in parents",
-                fields="files(id, name, mimeType)"
-            ).execute()
-            
-            items = results.get('files', [])
-            documents = []
-            
-            # Download each file and process it
-            for item in items:
-                if 'folder' not in item.get('mimeType', ''):  # Not a folder
-                    download_path = os.path.join(download_dir, item['name'])
-                    
-                    # Download the file
-                    request = drive_service.files().get_media(fileId=item['id'])
-                    with open(download_path, 'wb') as f:
-                        downloader = MediaIoBaseDownload(f, request)
-                        done = False
-                        while not done:
-                            status, done = downloader.next_chunk()
-                    
-                    # Use the local connector to process the downloaded file
-                    documents.extend(self.local_connector.load_documents(download_path))
-                    
-                    # Clean up the downloaded file
-                    os.remove(download_path)
-            
-            return documents
-            
-        except Exception as e:
-            print(f"Error connecting to Google Drive: {str(e)}")
-            return []
+# Import connectors
+from connectors import LocalConnector, OneDriveConnector
 
 class RAGSystem:
     """Main RAG system that integrates data sources, indexing, and generation."""
@@ -242,15 +48,8 @@ class RAGSystem:
         self.index = None
         
         # Initialize connectors
-        self.local_connector = LocalFileConnector()
-    
-    def connect_to_onedrive(self):
-        """Create a OneDrive connector."""
-        return OneDriveConnector()
-    
-    def connect_to_google_drive(self):
-        """Create a Google Drive connector."""
-        return GoogleDriveConnector()
+        self.local_connector = LocalConnector()
+        self.onedrive_connector = OneDriveConnector()
     
     def index_documents(self, documents: List[Document], force_reindex: bool = False) -> int:
         """Index documents into the vector store.

@@ -1,0 +1,16 @@
+data:
+  local:
+    - ./docs/**/*.pdf
+
+  # onedrive:
+  #   - Documents/Bill_Cottrell.pdf
+  #   - Syftbox/
+
+settings:
+  vector_store: ./rag_db
+  embedding_model: BAAI/bge-small-en-v1.5
+  chunk_size: 512
+  ollama_model: llama3.2:latest
+  ollama_url: http://localhost:11434
+  top_k: 3
+
