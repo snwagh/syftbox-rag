@@ -1,5 +1,13 @@
 #!/bin/sh
 
+# Function to check if SyftBox is running
+check_syftbox() {
+    if ! pgrep -f "syftbox" > /dev/null; then
+        echo "Error: SyftBox is not running. Please start SyftBox and try again."
+        exit 1
+    fi
+}
+
 # Function to check if Docker is running
 check_docker() {
     if ! docker info > /dev/null 2>&1; then
@@ -25,12 +33,15 @@ get_config() {
 # Function to install
 install() {
     echo "Installing applications..."
+    check_syftbox
     check_docker
     check_port
     get_config
 
-    syftbox app install https://github.com/openmined/rag-ingestor.git
-    syftbox app install https://github.com/openmined/rag-router-demo.git
+    # syftbox app install https://github.com/openmined/rag-ingestor.git
+    # syftbox app install https://github.com/openmined/rag-router-demo.git
+    cp -r ~/Documents/Coding/rag-ingestor ~/SyftBox/apps/rag-ingestor
+    cp -r ~/Documents/Coding/rag-router-demo ~/SyftBox/apps/rag-router-demo
 
     echo "........................."
     echo "Waiting for 10 seconds..."
@@ -46,7 +57,17 @@ test() {
     echo "Running tests..."
     get_config
     cd $data_dir/apps/rag-router-demo/
-    uv run chat_test.py
+    
+    echo "Enter a test query (or press Enter to run with default query):"
+    read test_query
+    
+    if [ -z "$test_query" ]; then
+        echo "Running test without custom query..."
+        uv run chat_test.py
+    else
+        echo "Running test with query: $test_query"
+        uv run chat_test.py "$test_query"
+    fi
 }
 
 # Function to clean
