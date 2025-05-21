@@ -38,10 +38,10 @@ install() {
     check_port
     get_config
 
-    # syftbox app install https://github.com/openmined/rag-ingestor.git
-    # syftbox app install https://github.com/openmined/rag-router-demo.git
-    cp -r ~/Documents/Coding/rag-ingestor ~/SyftBox/apps/rag-ingestor
-    cp -r ~/Documents/Coding/rag-router-demo ~/SyftBox/apps/rag-router-demo
+    syftbox app install https://github.com/openmined/rag-ingestor.git
+    syftbox app install https://github.com/openmined/rag-router-demo.git
+    # cp -r ~/Documents/Coding/rag-ingestor ~/SyftBox/apps/rag-ingestor
+    # cp -r ~/Documents/Coding/rag-router-demo ~/SyftBox/apps/rag-router-demo
 
     echo "........................."
     echo "Waiting for 10 seconds..."
