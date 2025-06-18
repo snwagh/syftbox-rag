@@ -40,8 +40,8 @@ install() {
 
     syftbox app install https://github.com/openmined/rag-ingestor.git
     syftbox app install https://github.com/openmined/rag-router-demo.git
-    # cp -r ~/Documents/Coding/rag-ingestor ~/SyftBox/apps/rag-ingestor
-    # cp -r ~/Documents/Coding/rag-router-demo ~/SyftBox/apps/rag-router-demo
+    # cp -r ~/Documents/Coding/rag-ingestor ~/SyftBox/apps/com.github.openmined.rag-ingestor
+    # cp -r ~/Documents/Coding/rag-router-demo ~/SyftBox/apps/com.github.openmined.rag-router-demo
 
     echo "........................."
     echo "Waiting for 10 seconds..."
@@ -56,17 +56,19 @@ install() {
 test() {
     echo "Running tests..."
     get_config
-    cd $data_dir/apps/rag-router-demo/
+    cd $data_dir/apps/com.github.openmined.rag-router-demo/
     
-    echo "Enter a test query (or press Enter to run with default query):"
+    echo "Enter a test query (required):"
     read test_query
-    
-    if [ -z "$test_query" ]; then
-        echo "Running test without custom query..."
-        uv run chat_test.py
-    else
-        echo "Running test with query: $test_query"
+    echo "Enter a datasite that is hosting retrieval (optional, default your own):"
+    read datasite
+
+    if [ -z "$datasite" ]; then
+        echo "Running test with query: \"$test_query\" on your own datasite"
         uv run chat_test.py "$test_query"
+    else
+        echo "Running test with query: \"$test_query\" on datasite: $datasite"
+        uv run chat_test.py "$test_query" $datasite
     fi
 }
 
@@ -79,8 +81,8 @@ clean() {
     docker kill $(docker ps -q --filter ancestor=qdrant/qdrant)
 
     # Remove apps
-    rm -rf ~/SyftBox/apps/rag-router-demo
-    rm -rf ~/SyftBox/apps/rag-ingestor
+    rm -rf ~/SyftBox/apps/com.github.openmined.rag-router-demo
+    rm -rf ~/SyftBox/apps/com.github.openmined.rag-ingestor
 
     # Remove app data
     rm -rf ~/SyftBox/datasites/$email/app_data/
