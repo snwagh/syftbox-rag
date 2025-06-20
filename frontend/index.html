@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Document Search</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>🔍 RAG Document Search</h1>
+            <p>Lightweight local RAG system for indexing and searching your documents</p>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <span>📄 Chunks: </span>
+                    <span class="stat-value" id="totalDocs">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>📁 Watched Files/Folders: </span>
+                    <span class="stat-value" id="watchedFoldersCount">0</span>
+                </div>
+                <div class="stat-item status-item-clickable" id="indexingStatusContainer">
+                    <span>⚡ Indexing Status: </span>
+                    <div class="status-display">
+                        <span class="stat-value" id="indexingStatus">Idle</span>
+                        <div class="status-progress" id="statusProgress" style="display: none;">
+                            <div class="status-progress-bar">
+                                <div class="status-progress-fill" id="statusProgressFill"></div>
+                            </div>
+                            <span class="status-progress-text" id="statusProgressText">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation (Separate Container) -->
+        <div class="tab-navigation">
+            <div class="tabs">
+                <button class="tab active" data-tab="search">Search Documents</button>
+                <button class="tab" data-tab="files">Manage Files</button>
+            </div>
+        </div>
+
+        <!-- Search Tab -->
+        <div id="searchTab" class="tab-content active">
+            <div class="search-container">
+                <input type="text" 
+                       id="searchBox" 
+                       class="search-box" 
+                       placeholder="Enter your search query..."
+                       autocomplete="off">
+                
+                <div class="search-options">
+                    <label>
+                        Results limit:
+                        <input type="number" id="searchLimit" value="5" min="1" max="100">
+                    </label>
+                    <button id="searchBtn" class="btn">Search</button>
+                </div>
+            </div>
+            
+            <div id="searchStats" class="search-stats">
+                Enter a search query to find relevant documents
+            </div>
+            
+            <div id="searchResults" class="results-container">
+                <div class="empty-state">
+                    <h3>No search performed yet</h3>
+                    <p>Enter a search query above to find relevant documents from your indexed files.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Management Tab -->
+        <div id="filesTab" class="tab-content">
+            <div class="folder-browser-header">
+                <h2>Choose folders and files to watch on this computer</h2>
+                <p>Selected folders and files will be indexed and searchable. Click "Save Changes" to apply your selections.</p>
+                
+                <!-- Save Changes Section -->
+                <div class="save-section" id="saveSection" style="display: none;">
+                    <div class="changes-indicator">
+                        <span class="changes-icon">●</span>
+                        <span>You have unsaved changes</span>
+                        <button class="btn btn-primary" id="saveChangesBtn">Save Changes</button>
+                        <button class="btn btn-secondary" id="discardChangesBtn">Discard</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation breadcrumb -->
+            <div class="breadcrumb" id="breadcrumb">
+                <span class="breadcrumb-item" data-path="">🏠 Home</span>
+            </div>
+            
+            <!-- File browser container -->
+            <div class="file-browser">
+                <!-- Computer section -->
+                <div class="file-browser-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="computer-icon">💻</span>
+                            <span id="computerName">Your Computer</span>
+                        </div>
+                    </div>
+                    
+                    <!-- File tree -->
+                    <div class="file-tree" id="fileTree">
+                        <div class="loading-state">
+                            <div class="loading"></div>
+                            <span>Loading file structure...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indexing Status Modal -->
+    <div id="indexingModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Processing Details & Recent Logs</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="indexing-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">0% Complete</div>
+                </div>
+                <div class="indexing-logs">
+                    <h4>Recent Activity</h4>
+                    <div class="logs-container" id="logsContainer">
+                        <div class="log-entry">No indexing activity yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

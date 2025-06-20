@@ -1,0 +1,6 @@
+chromadb>=1.0.11
+docling>=2.34.0
+fastapi>=0.115.9
+sentence-transformers>=4.1.0
+uvicorn>=0.34.2
+watchdog>=6.0.0 
