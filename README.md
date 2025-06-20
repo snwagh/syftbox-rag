@@ -62,12 +62,12 @@ A lightweight, local RAG (Retrieval-Augmented Generation) system for indexing an
 
 2. **Install dependencies**:
    ```bash
-   uv sync
+   uv pip install -r requirements.txt
    ```
 
 3. **Run the application**:
    ```bash
-   uv run python run.py
+   ./run.sh
    ```
 
 4. **Open your browser** and go to:
@@ -146,7 +146,7 @@ export MAX_SEARCH_LIMIT="100"         # Maximum search results
 
 ### Method 1: Using the run script (Recommended)
 ```bash
-uv run run.py
+./run.sh
 ```
 
 ### Method 2: Direct FastAPI
@@ -157,6 +157,11 @@ uv run uvicorn backend.main:app --host 127.0.0.1 --port 9000
 ### Method 3: Development mode (with auto-reload)
 ```bash
 uv run uvicorn backend.main:app --host 127.0.0.1 --port 9000 --reload
+```
+
+### Stopping the Application
+```bash
+./cleanup.sh
 ```
 
 ## 📁 Project Structure
@@ -175,10 +180,12 @@ syftbox-rag/
 │   ├── index.html           # Main interface with tabs
 │   ├── app.js               # Frontend logic & file browser
 │   └── style.css            # Modern responsive styling
+├── data/                    # Application data (logs, PID files)
 ├── vector_db/               # ChromaDB storage (auto-created)
 ├── .tokens.json             # OAuth tokens (optional)
-├── pyproject.toml           # Project dependencies
-├── run.py                   # Application launcher
+├── requirements.txt         # Python dependencies
+├── run.sh                   # Application launcher script
+├── cleanup.sh               # Application cleanup script
 └── README.md                # This file
 ```
 
@@ -251,8 +258,8 @@ uv run isort backend/
 
 1. **Port already in use**:
    ```bash
-   export PORT="8080"  # Use a different port
-   uv run python run.py
+   export SYFTBOX_ASSIGNED_PORT="8080"  # Use a different port
+   ./run.sh
    ```
 
 2. **Permission errors when adding folders**:
@@ -274,13 +281,30 @@ uv run isort backend/
    - Verify file permissions and accessibility
    - Monitor activity logs for error messages
 
+6. **Application won't start**:
+   ```bash
+   # Clean up any stale processes and files
+   ./cleanup.sh
+   # Then try starting again
+   ./run.sh
+   ```
+
 ### Logs and Debugging
 
-The application logs are displayed in the terminal. For more detailed logging:
+The application logs are stored in `./data/app.log`. For more detailed logging:
 
 ```bash
 export LOG_LEVEL="DEBUG"
-uv run python run.py
+./run.sh
+```
+
+You can also check the application status:
+```bash
+# Check if application is running
+ps aux | grep uvicorn
+
+# View recent logs
+tail -f ./data/app.log
 ```
 
 ### OAuth Configuration

@@ -148,6 +148,10 @@ class SearchRequest(BaseModel):
     query: str
     limit: int = Config.DEFAULT_SEARCH_LIMIT
 
+class SearchPathsRequest(BaseModel):
+    query: str
+    limit: int = Config.DEFAULT_SEARCH_LIMIT
+
 class FileStructureRequest(BaseModel):
     path: Optional[str] = None
     expand_folders: bool = True
@@ -196,6 +200,35 @@ async def search_documents(request: SearchRequest):
         return {
             "query": request.query,
             "results": format_search_results(results)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/search-paths")
+async def search_document_paths(request: SearchPathsRequest):
+    """Search for similar documents and return only file paths"""
+    try:
+        # Generate query embedding
+        query_embedding = embedding_gen.embed_text(request.query)
+        
+        # Search vector store
+        results = vector_store.search(
+            query_embedding=query_embedding,
+            n_results=request.limit,
+            include=["metadatas", "distances"]
+        )
+        
+        # Extract unique file paths from results
+        file_paths = set()
+        if results['metadatas'] and results['metadatas'][0]:
+            for metadata in results['metadatas'][0]:
+                if metadata and 'filepath' in metadata:
+                    file_paths.add(metadata['filepath'])
+        
+        return {
+            "query": request.query,
+            "file_paths": list(file_paths),
+            "total_files": len(file_paths)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
