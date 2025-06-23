@@ -41,7 +41,7 @@ start_application() {
         rm -rf .venv
         uv venv -p 3.12 .venv
         uv pip install -r requirements.txt
-        SYFTBOX_ASSIGNED_PORT=${SYFTBOX_ASSIGNED_PORT:-9000}
+        SYFTBOX_ASSIGNED_PORT=9000 #${SYFTBOX_ASSIGNED_PORT:-9000}
         uv run uvicorn backend.main:app --host 0.0.0.0 --port $SYFTBOX_ASSIGNED_PORT --workers 1
     ) > "$LOG_FILE" 2>&1 &
     
